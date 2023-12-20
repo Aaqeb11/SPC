@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({
 app.use(express.json())
 const db = new pg.Client({
     user: "postgres",
-    host: "localhost",
+    host: "127.0.0.1",
     database: "world",
     password: "Aaqeb@110",
     port: 5432,
