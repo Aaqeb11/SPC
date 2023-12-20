@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let but = document.getElementById("but");
+            let video = document.getElementById("vid");
+            let mediaDevices = navigator.mediaDevices;
+            let countText=document.getElementById("countText")
+            let partn=document.getElementById("partn")
+            let add=document.getElementById("Add")
+            let sub=document.getElementById("Sub")
+            let listP=document.getElementById("list");
+            const scanButton = document.getElementById('scanButton');
+            let barcodeScanner;
+            var scannedBarcode;
+            let data;
+            vid.muted = true;
+            but.addEventListener("click", () => {
+                // if(video==false){
+                //         video=true;
+                //         // video.stop();
+                //     }else{video=false
+                //     video.stop()}
+    
+                // Accessing the user camera and video.
+                mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio:false,
+                    })
+                    .then((cameraStream) => {
+    
+                        // Changing the source of video to current stream.
+                        video.srcObject = cameraStream;
+                        video.addEventListener("loadedmetadata", () => {
+                            video.play();
+                        });
+                        barcodeScanner = new BarcodeDetector();
+
+                        stream = cameraStream;
+                    })
+                    .catch(alert);
+
+
+            });
+            scanButton.addEventListener('click', async () => {
+            try {
+            const barcodes = await barcodeScanner.detect(video);
+
+            if (barcodes.length > 0) {
+                scannedBarcode = barcodes[0].rawValue;
+                // alert(`Scanned Barcode: ${scannedBarcode}`);
+                var obj={
+                    barcode:scannedBarcode
+                }
+                await fetch("/barcode",{
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json",
+                },
+                body:JSON.stringify(obj),
+            })
+
+                if (stream) {
+                            const tracks = stream.getTracks();
+                            tracks.forEach(track => track.stop());
+                        }
+                const baseUrl="http://localhost:3000/barcode"
+                const res=await fetch(baseUrl,{
+                        method:'GET'
+                        })
+                    console.log(res);
+                    data=  await res.json();
+                    console.log("Count data:", data.count);
+                    console.log("Scanned barcode:", scannedBarcode);
+                    console.log("list price:",data.listprice)
+                    countText.innerHTML="Quantity: "+await data.count 
+                    partn.innerHTML="Part number: "+scannedBarcode
+                    listP.innerHTML="List Price:"+await data.listprice
+            } else {
+                alert('No barcode detected');
+            }
+        } catch (error) {
+            console.error('Barcode scanning error:', error);
+        }
+    });
+    add.addEventListener('click',async()=>{
+        if(scannedBarcode==null){
+            alert('please scan barcode')
+        }else{
+            // let newCount={
+            //     count:data.count++
+            // }
+            await fetch("/add",{
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json",
+                }  
+                // body:JSON.stringify(newCount),
+            })
+            const baseurl="http://localhost:3000/add"
+            const ress=await fetch(baseurl,{
+                        method:'GET'
+                        })
+                    console.log(ress);
+                    const data2=await ress.json();
+                    countText.innerHTML="Quantity: "+data2.count2 
+                    partn.innerHTML="Part number: "+scannedBarcode
+        }
+        
+    })
+    sub.addEventListener('click',async()=>{
+        if(scannedBarcode==null){
+            alert('please scan barcode')
+        }else{
+            // let newCount={
+            //     count:data.count++
+            // }
+            await fetch("/sub",{
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json",
+                }  
+                // body:JSON.stringify(newCount),
+            })
+            const baseurl="http://localhost:3000/sub"
+            const resss=await fetch(baseurl,{
+                        method:'GET'
+                        })
+                    console.log(resss);
+                    const data3=await resss.json();
+                    countText.innerHTML="Quantity: "+data3.count3 
+                    partn.innerHTML="Part number: "+scannedBarcode
+        }
+        
+    })
+
+    
+        });
+        
+    </script>
+   
+   <style>
+    div {
+        width: 100%;
+        max-width: 500px; /* Set a maximum width for better readability on larger screens */
+        margin: 0 auto; /* Center the div horizontally */
+        border: 2px solid black;
+        position: relative;
+    }
+
+    video {
+        width: 100%;
+        height: auto; /* Maintain the video's aspect ratio */
+        object-fit: cover;
+    }
+    .center{
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+    }
+    .head{
+        display: flex;
+        border: none;
+        justify-content: space-evenly;
+    }
+</style>
+    <div id="v">
+        <video id="vid"></video>
+    </div>
+    <br />
+    <div class="center">
+        <button id="but" autoplay>
+            Open WebCam
+        </button>
+
+        <button id="scanButton">
+            Scan
+        </button>
+        <button id="Add">Add</button>
+        <button id="Sub">Sub</button>
+    </div>
+    <div class="head">
+        <h1 id="countText">Quantity:</h1>
+        <h1 id="partn">Part number:</h1>
+        <h1 id="list">List Price:</h1>
+    </div>
+   
+    
+    
+</body>
+</html>
